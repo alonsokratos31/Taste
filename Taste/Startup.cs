@@ -18,6 +18,7 @@ using Taste.DataAccess.Data.Repository;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Taste.Utility;
 using Stripe;
+using Taste.DataAccess.Data.Initializer;
 
 namespace Taste
 {
@@ -50,8 +51,10 @@ namespace Taste
                 options.Cookie.IsEssential = true;
             });
 
-            services.AddMvc(options => options.EnableEndpointRouting = false)
-                .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0);
+            //services.AddMvc(options => options.EnableEndpointRouting = false)
+            //    .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0);
+
+            services.AddRazorPages();
 
             services.Configure<StripeSettings>(Configuration.GetSection("Stripe"));
 
@@ -69,16 +72,18 @@ namespace Taste
 
             });
 
+            services.AddScoped<IDbInitializer, DbInitializer>();
+
             services.AddAuthentication().AddFacebook(facebookOptions =>
             {
-                facebookOptions.AppId = "339641104537527";
-                facebookOptions.AppSecret = "6e7dab0445d36dc5c4b4f11901962222";
+                facebookOptions.AppId = Configuration.GetSection("Facebook")["AppId"];
+                facebookOptions.AppSecret = Configuration.GetSection("Facebook")["AppSecret"];
             });
 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IDbInitializer dbInitializer)
         {
             if (env.IsDevelopment())
             {
@@ -95,13 +100,19 @@ namespace Taste
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseSession();
+            dbInitializer.Initialize();
 
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseMvc();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapRazorPages();
+            });
+            //app.UseMvc();
             StripeConfiguration.ApiKey = Configuration.GetSection("Stripe")["SecretKey"];
         }
     }

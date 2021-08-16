@@ -16,7 +16,7 @@
                     <div class="backgroundWhiteBorder10Padding">
                         <div class="row">
                             <div class="col-4">
-                                Order Number : $$ORDER ID$$
+                                Order Number : @item.OrderHeader.Id
                                 <ul class="text-info">
 
                                    @foreach (var details in item.OrderDetails)
@@ -59,9 +59,6 @@
                                             </button>
                                         }
                                     }
-
-
-
 
                                     <button type="submit" class="btn btn-warning form-control mb-3" asp-page-handler="OrderCancel" asp-route-OrderId="@item.OrderHeader.Id">
                                         <i class="fas fa-times"></i> &nbsp; Cancel Order

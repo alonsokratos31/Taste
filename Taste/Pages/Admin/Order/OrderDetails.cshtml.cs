@@ -4,8 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Stripe;
 using Taste.DataAccess.Data.Repository.IRepository;
+using Taste.Models;
 using Taste.Models.ViewModels;
+using Taste.Utility;
 
 namespace Taste.Pages.Admin.Order
 {
@@ -32,5 +35,42 @@ namespace Taste.Pages.Admin.Order
 
             OrderDetailsVM.OrderHeader.ApplicationUser = _unitOfWork.ApplicationUser.GetFirstOrDefault(u => u.Id == OrderDetailsVM.OrderHeader.UserId);
         }
+
+        public IActionResult OnPostOrderConfirm(int orderId)
+        {
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(o => o.Id == orderId);
+            orderHeader.Status = SD.StatusCompleted;
+            _unitOfWork.Save();
+            return RedirectToPage("OrderList");
+        }
+
+        public IActionResult OnPostOrderCancel(int orderId)
+        {
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(o => o.Id == orderId);
+            orderHeader.Status = SD.StatusCancelled;
+            _unitOfWork.Save();
+            return RedirectToPage("OrderList");
+        }
+
+        public IActionResult OnPostOrderRefund(int orderId)
+        {
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(o => o.Id == orderId);
+            //refund ammount
+
+            var options = new RefundCreateOptions
+            {
+                Amount = Convert.ToInt32(orderHeader.OrderTotal * 100),
+                Reason = RefundReasons.RequestedByCustomer,
+                Charge = orderHeader.Transaction
+            };
+
+            var service = new RefundService();
+            service.Create(options);
+
+            orderHeader.Status = SD.StatusRefunded;
+            _unitOfWork.Save();
+            return RedirectToPage("OrderList");
+        }
+
     }
 }

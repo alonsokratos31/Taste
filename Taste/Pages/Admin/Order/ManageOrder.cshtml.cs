@@ -71,7 +71,7 @@ namespace Taste.Pages.Admin.Order
             return RedirectToPage("ManageOrder");
         }
 
-        public IActionResult OnPostOrderOrderRefund(int orderId)
+        public IActionResult OnPostOrderRefund(int orderId)
         {
             OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(o => o.Id == orderId);
             //refund ammount
